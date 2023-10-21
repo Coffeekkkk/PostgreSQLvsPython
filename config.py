@@ -1,3 +1,3 @@
 user = 'postgres'
-db_name = ''
+db_name = 'dbpyth'
 password = '758066'
