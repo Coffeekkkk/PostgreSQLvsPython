@@ -7,6 +7,12 @@ try:
         user=user,
         password=password
     )
+
+except Exception as _ex:
+    print('[INFO] Error while working with PostgreSQL', _ex)
+
+
+def create_tables():
     with connection.cursor() as cursor:
         cursor.execute(
             '''CREATE TABLE IF NOT EXISTS clients(
@@ -22,10 +28,6 @@ try:
             );'''
         )
         connection.commit()
-
-
-except Exception as _ex:
-    print('[INFO] Error while working with PostgreSQL', _ex)
 
 
 def add_client(name, surname, email, phone=None):
@@ -102,10 +104,50 @@ def delete_client(client_id):
         connection.commit()
 
 
-# add_client('Denis', 'Kravchenko', 'pochtatdenta@mal.co')
-# add_phone(1, None)
-# change_client(1, name='Fedor', phone='1111111')
-# delete_phone(2)
+def find_client(name=None, surname=None, email=None, phone=None):
+    if name is None:
+        name = '%'
+    else:
+        name = '%' + name + '%'
+    if surname is None:
+        surname = '%'
+    else:
+        surname = '%' + surname + '%'
+    if email is None:
+        email = '%'
+    else:
+        email = '%' + email + '%'
+    if phone is None:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT c.id, name, surname, email, phone FROM clients c
+                LEFT JOIN phones p ON c.id = p.fk_client_id
+                WHERE c.name iLIKE %s AND c.surname iLIKE %s
+                AND c.email iLIKE %s AND p.phone IS %s
+                """, (name, surname, email, phone))
+            x = [i for i in cursor.fetchall()]
+            for i in x:
+                print(i)
+    else:
+        phone = '%' + phone + '%'
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT c.id, name, surname, email, phone FROM clients c
+                LEFT JOIN phones p ON c.id = p.fk_client_id
+                WHERE c.name iLIKE %s AND c.surname iLIKE %s
+                AND c.email iLIKE %s AND p.phone LIKE %s
+                """, (name, surname, email, phone))
+            x = [i for i in cursor.fetchall()]
+            for i in x:
+                print(i)
+
+
+create_tables()
+add_client('Denis', 'Kravchenko', 'pochtatdemal.co')
+add_phone(4, '222')
+change_client(1, name='Fedor', phone='1111111')
+delete_phone(2)
 delete_client(1)
+find_client(name='Denis')
 
 connection.close()
